@@ -1,0 +1,107 @@
+name: movienook
+
+services:
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: movienook-plex
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+      VERSION: docker
+      PLEX_CLAIM: ${PLEX_CLAIM:-}
+    volumes:
+      - ${MOVIENOOK_ROOT}/config/plex:/config
+      - ${MOVIENOOK_ROOT}/media:/data/media
+    ports:
+      - 127.0.0.1:${PLEX_PORT}:32400
+    restart: unless-stopped
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: movienook-radarr
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    volumes:
+      - ${MOVIENOOK_ROOT}/config/radarr:/config
+      - ${MOVIENOOK_ROOT}/media:/data/media
+      - ${MOVIENOOK_ROOT}/downloads:/data/downloads
+    ports:
+      - 127.0.0.1:${RADARR_PORT}:7878
+    restart: unless-stopped
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: movienook-sonarr
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    volumes:
+      - ${MOVIENOOK_ROOT}/config/sonarr:/config
+      - ${MOVIENOOK_ROOT}/media:/data/media
+      - ${MOVIENOOK_ROOT}/downloads:/data/downloads
+    ports:
+      - 127.0.0.1:${SONARR_PORT}:8989
+    restart: unless-stopped
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: movienook-prowlarr
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    volumes:
+      - ${MOVIENOOK_ROOT}/config/prowlarr:/config
+    ports:
+      - 127.0.0.1:${PROWLARR_PORT}:9696
+    restart: unless-stopped
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: movienook-qbittorrent
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+      WEBUI_PORT: 8080
+      TORRENTING_PORT: ${QBITTORRENT_TORRENT_PORT}
+    volumes:
+      - ${MOVIENOOK_ROOT}/config/qbittorrent:/config
+      - ${MOVIENOOK_ROOT}/downloads:/data/downloads
+    ports:
+      - 127.0.0.1:${QBITTORRENT_WEBUI_PORT}:8080
+      - 127.0.0.1:${QBITTORRENT_TORRENT_PORT}:${QBITTORRENT_TORRENT_PORT}
+      - 127.0.0.1:${QBITTORRENT_TORRENT_PORT}:${QBITTORRENT_TORRENT_PORT}/udp
+    # Start through MovieNook only, after the VPN decision. A VPN container with a
+    # kill switch is still required to protect against mid-download disconnects.
+    restart: "no"
+
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:latest
+    container_name: movienook-sabnzbd
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    volumes:
+      - ${MOVIENOOK_ROOT}/config/sabnzbd:/config
+      - ${MOVIENOOK_ROOT}/downloads:/data/downloads
+    ports:
+      - 127.0.0.1:${SABNZBD_PORT}:8080
+    restart: unless-stopped
+
+  seerr:
+    image: ghcr.io/seerr-team/seerr:latest
+    container_name: movienook-seerr
+    environment:
+      LOG_LEVEL: info
+      TZ: ${TZ}
+    volumes:
+      - ${MOVIENOOK_ROOT}/config/seerr:/app/config
+    ports:
+      - 127.0.0.1:${SEERR_PORT}:5055
+    restart: unless-stopped

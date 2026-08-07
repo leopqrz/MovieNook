@@ -1,0 +1,10 @@
+# Local machine values and backups may contain credentials, API keys, cookies, or Plex identity data.
+.env
+private/
+config/*
+!config/.gitkeep
+media/
+downloads/
+*.log
+.DS_Store
+**/.DS_Store
