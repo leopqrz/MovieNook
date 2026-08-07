@@ -90,25 +90,14 @@ fi
 set -a
 . "$ROOT_DIR/.env"
 set +a
-browser_marker="$ROOT_DIR/private/last-browser-open"
-browser_debounce_seconds="${MOVIENOOK_BROWSER_DEBOUNCE_SECONDS:-120}"
-current_time="$(date +%s)"
-last_open_time="$(sed -n '1p' "$browser_marker" 2>/dev/null || true)"
-if [[ "$last_open_time" =~ ^[0-9]+$ ]] &&
-   (( current_time - last_open_time >= 0 && current_time - last_open_time < browser_debounce_seconds )); then
-  echo 'Plex and Seerr were opened recently; skipping duplicate browser tabs.'
-else
-  umask 077
-  printf '%s\n' "$current_time" > "$browser_marker"
-  case "$(uname -s)" in
-    Darwin) open "http://127.0.0.1:${SEERR_PORT}" "https://app.plex.tv/desktop/" ;;
-    Linux)
-      xdg-open "http://127.0.0.1:${SEERR_PORT}" >/dev/null 2>&1 || true
-      xdg-open "https://app.plex.tv/desktop/" >/dev/null 2>&1 || true
-      ;;
-    MINGW*|MSYS*|CYGWIN*)
-      cmd.exe /c start '""' "http://127.0.0.1:${SEERR_PORT}" >/dev/null 2>&1
-      cmd.exe /c start '""' "https://app.plex.tv/desktop/" >/dev/null 2>&1
-      ;;
-  esac
-fi
+case "$(uname -s)" in
+  Darwin) open "http://127.0.0.1:${SEERR_PORT}" "https://app.plex.tv/desktop/" ;;
+  Linux)
+    xdg-open "http://127.0.0.1:${SEERR_PORT}" >/dev/null 2>&1 || true
+    xdg-open "https://app.plex.tv/desktop/" >/dev/null 2>&1 || true
+    ;;
+  MINGW*|MSYS*|CYGWIN*)
+    cmd.exe /c start '""' "http://127.0.0.1:${SEERR_PORT}" >/dev/null 2>&1
+    cmd.exe /c start '""' "https://app.plex.tv/desktop/" >/dev/null 2>&1
+    ;;
+esac
