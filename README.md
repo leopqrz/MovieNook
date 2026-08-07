@@ -94,10 +94,10 @@ For another Linux distribution, use the matching official [Docker Engine install
 
 ## 2. Get MovieNook
 
-The project is not yet published to a GitHub remote. Once it is published, replace `<MOVIENOOK_GITHUB_URL>` with its HTTPS clone URL:
+Clone the public repository and enter its folder:
 
 ```bash
-git clone <MOVIENOOK_GITHUB_URL> MovieNook
+git clone https://github.com/leopqrz/MovieNook.git MovieNook
 cd MovieNook
 ```
 
