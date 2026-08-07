@@ -65,6 +65,10 @@ function setField(schema, name, value) {
   if (field) field.value = value;
 }
 
+function getField(schema, name) {
+  return schema.fields?.find(candidate => candidate.name === name)?.value;
+}
+
 function normalize(value) {
   return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
 }
@@ -208,10 +212,32 @@ async function ensureIndexer(record) {
 
   const current = await apiGet("prowlarr", "/api/v1/indexer");
   const existing = current.find(indexer => normalize(indexer.name) === normalize(record.name));
+  if (existing) {
+    const existingBaseUrl = String(getField(existing, "baseUrl") || "").replace(/\/$/, "");
+    const existingApiPath = String(getField(existing, "apiPath") || "").replace(/\/$/, "");
+    const existingApiKey = String(getField(existing, "apiKey") || "");
+    const keyIsStoredButMasked = /^\*+$/.test(existingApiKey);
+    const connectionMatches =
+      existingBaseUrl === location.baseUrl.replace(/\/$/, "") &&
+      existingApiPath === location.apiPath.replace(/\/$/, "") &&
+      (existingApiKey === record.apiKey || keyIsStoredButMasked);
+    if (existing.enable !== false && connectionMatches) {
+      console.log("Kept an existing matching Usenet indexer in Prowlarr.");
+      return true;
+    }
+  }
   if (existing) schema.id = existing.id;
   else delete schema.id;
-  if (existing) await apiWrite("prowlarr", `/api/v1/indexer/${existing.id}`, "PUT", schema);
-  else await apiWrite("prowlarr", "/api/v1/indexer", "POST", schema);
+  try {
+    if (existing) await apiWrite("prowlarr", `/api/v1/indexer/${existing.id}`, "PUT", schema);
+    else await apiWrite("prowlarr", "/api/v1/indexer", "POST", schema);
+  } catch (error) {
+    if (existing?.enable !== false) {
+      console.warn(`Kept an existing Prowlarr indexer because revalidation failed: ${error.message}`);
+      return true;
+    }
+    throw error;
+  }
   console.log("Configured one Usenet indexer in Prowlarr.");
   return true;
 }
@@ -378,7 +404,11 @@ async function main() {
   }));
   let configuredIndexers = 0;
   for (const indexer of indexers) {
-    if (await ensureIndexer(indexer)) configuredIndexers += 1;
+    try {
+      if (await ensureIndexer(indexer)) configuredIndexers += 1;
+    } catch (error) {
+      console.warn(`Skipped one unavailable indexer configuration: ${error.message}`);
+    }
   }
   if (!configuredIndexers) throw new Error("No complete indexer credentials were found");
   await ensureProwlarrApplication("Radarr", "radarr");

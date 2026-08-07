@@ -80,7 +80,13 @@ if ! grep -qE 'PlexOnlineToken="[^"]+' "$preferences" 2>/dev/null; then
 fi
 
 /bin/bash "$ROOT_DIR/scripts/portable/sync-credentials.sh"
+set +e
 /bin/bash "$ROOT_DIR/scripts/portable/configure-movienook.sh"
+configuration_status=$?
+set -e
+if (( configuration_status != 0 )); then
+  echo 'MovieNook service configuration needs attention; opening Plex and Seerr because both interfaces are already available.' >&2
+fi
 set -a
 . "$ROOT_DIR/.env"
 set +a
