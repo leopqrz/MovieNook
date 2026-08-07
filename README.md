@@ -1,28 +1,52 @@
 # MovieNook
 
-MovieNook is one local Docker Compose setup for requesting, downloading, organizing, and watching movies and TV series with Plex, Seerr, Radarr, Sonarr, Prowlarr, qBittorrent, and SABnzbd.
+MovieNook is a self-hosted movie and TV setup for requesting, downloading, organizing, and watching media. It runs Plex, Seerr, Radarr, Sonarr, Prowlarr, qBittorrent, and SABnzbd with Docker Compose.
 
-After the first-time setup, the normal action is one click:
+After setup, one launcher starts everything and opens:
 
-- macOS: double-click **MovieNook.app**.
-- Windows: double-click **MovieNook.cmd**.
-- Linux: double-click **MovieNook.sh** if the desktop permits executable scripts, or run `./MovieNook.sh` in a terminal.
+- **Seerr** to find and request movies or series.
+- **Plex** to watch downloaded media.
 
-The launcher checks the VPN, starts the existing stack, completes safe local configuration, and opens Seerr for requests plus Plex for watching. It is safe to run repeatedly.
+## Choose your operating system
 
-## 1. Install the prerequisites
+Follow only the guide for your computer:
 
-MovieNook needs Docker with the Compose plugin, Git, `curl`, and a command that can open browser URLs. Use the section for the target operating system.
+- [macOS setup](#macos-setup)
+- [Windows setup](#windows-setup)
+- [Linux setup](#linux-setup-ubuntu-or-debian)
 
-### macOS
+## Before you begin
 
-macOS already includes `curl` and `open`. Install Homebrew if it is not installed:
+You need:
+
+- A free Plex account.
+- A Usenet provider account.
+- At least one Newznab-compatible indexer account and API key.
+- A VPN account if you want to use torrents through qBittorrent.
+
+Plex cannot provide the Usenet, indexer, or VPN credentials because those are separate services. MovieNook never stores your Plex, Google, Apple, or VPN password.
+
+# macOS setup
+
+Complete these steps in order. Commands go in the **Terminal** application.
+
+## macOS 1 — Install Docker and Git
+
+macOS already includes `curl` and the `open` command.
+
+Install Homebrew if `brew --version` says the command was not found:
 
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-Install Docker Desktop and Git:
+Make Homebrew available in the current Terminal window:
+
+```bash
+if [[ -x /opt/homebrew/bin/brew ]]; then eval "$(/opt/homebrew/bin/brew shellenv)"; elif [[ -x /usr/local/bin/brew ]]; then eval "$(/usr/local/bin/brew shellenv)"; fi
+```
+
+Install Docker Desktop and Git, then open Docker:
 
 ```bash
 brew install --cask docker
@@ -30,7 +54,7 @@ brew install git
 open -a Docker
 ```
 
-Accept Docker Desktop's first-run prompts, wait until it reports that the engine is running, then verify it:
+Accept Docker Desktop's first-run prompts. Wait until Docker reports that its engine is running, then verify the installation:
 
 ```bash
 docker version
@@ -39,11 +63,112 @@ git --version
 curl --version
 ```
 
-If Homebrew cannot be used, follow Docker's official [macOS installation instructions](https://docs.docker.com/desktop/setup/install/mac-install/) and install Git from [git-scm.com](https://git-scm.com/download/mac).
+If Homebrew cannot be used, follow Docker's official [macOS installation guide](https://docs.docker.com/desktop/setup/install/mac-install/) and install Git from [git-scm.com](https://git-scm.com/download/mac).
 
-### Windows 10 or 11
+## macOS 2 — Download MovieNook
 
-Open **PowerShell as Administrator** and install WSL, Docker Desktop, and Git:
+This places the entire project in `~/MovieNook`:
+
+```bash
+cd "$HOME"
+git clone https://github.com/leopqrz/MovieNook.git MovieNook
+cd MovieNook
+chmod +x MovieNook.sh scripts/portable/*.sh
+```
+
+If `~/MovieNook` already exists, do not clone over it. Enter the existing folder instead:
+
+```bash
+cd "$HOME/MovieNook"
+```
+
+## macOS 3 — Create and fill the private credential file
+
+Create the local folders and private credential file:
+
+```bash
+./scripts/portable/bootstrap.sh
+```
+
+Open the private file in TextEdit:
+
+```bash
+open -a TextEdit private/credentials.env
+```
+
+Fill in at least these fields with credentials from your own provider and indexer accounts:
+
+```dotenv
+USENET_PROVIDER_NAME=
+USENET_HOST=
+USENET_PORT=563
+USENET_USE_SSL=true
+USENET_USERNAME=
+USENET_PASSWORD=
+
+INDEXER_1_NAME=
+INDEXER_1_URL=
+INDEXER_1_API_KEY=
+```
+
+Save and close the file. Leave Radarr, Sonarr, Prowlarr, Seerr, SABnzbd, and qBittorrent API fields blank; MovieNook fills those local values after startup.
+
+## macOS 4 — Start MovieNook
+
+Double-click **MovieNook.app** in the MovieNook folder, or run:
+
+```bash
+open MovieNook.app
+```
+
+Follow the [first-launch steps](#what-happens-on-the-first-launch) when the browser opens.
+
+## macOS daily commands
+
+Open MovieNook:
+
+```bash
+cd "$HOME/MovieNook"
+open MovieNook.app
+```
+
+Show status:
+
+```bash
+cd "$HOME/MovieNook"
+./scripts/portable/status-movienook.sh
+```
+
+Stop only MovieNook services:
+
+```bash
+cd "$HOME/MovieNook"
+./scripts/portable/stop-movienook.sh
+```
+
+Update and restart:
+
+```bash
+cd "$HOME/MovieNook"
+git pull --ff-only
+docker compose --env-file .env pull
+open MovieNook.app
+```
+
+Show the latest startup errors:
+
+```bash
+cd "$HOME/MovieNook"
+tail -n 100 private/last-start.log
+```
+
+# Windows setup
+
+Complete these steps in order. Installation commands go in **PowerShell as Administrator**. MovieNook setup commands go in **Git Bash**.
+
+## Windows 1 — Install WSL, Docker, and Git
+
+Open PowerShell as Administrator and run:
 
 ```powershell
 wsl --install
@@ -51,7 +176,9 @@ winget install --exact --id Docker.DockerDesktop
 winget install --exact --id Git.Git
 ```
 
-Restart Windows if `wsl --install` requests it. Start Docker Desktop from the Start menu, accept its first-run prompts, and then verify the tools in a new PowerShell window:
+Restart Windows if `wsl --install` requests it. Open Docker Desktop from the Start menu, accept its first-run prompts, and wait until its engine is running.
+
+Open a new PowerShell window and verify the installation:
 
 ```powershell
 docker version
@@ -60,11 +187,111 @@ git --version
 curl.exe --version
 ```
 
-If `winget` is unavailable, use Docker's official [Windows installation instructions](https://docs.docker.com/desktop/setup/install/windows-install/) and [Git for Windows](https://git-scm.com/download/win). MovieNook uses Linux containers through Docker Desktop's WSL 2 backend.
+If `winget` is unavailable, follow Docker's official [Windows installation guide](https://docs.docker.com/desktop/setup/install/windows-install/) and install [Git for Windows](https://git-scm.com/download/win). MovieNook uses Linux containers through Docker Desktop's WSL 2 backend.
 
-### Ubuntu or Debian Linux
+## Windows 2 — Download MovieNook
 
-Run these commands in a terminal. They add Docker's official repository and install Docker Engine, the Compose plugin, Git, `curl`, `xdg-open`, and a text editor:
+Open **Git Bash** from the Start menu and run:
+
+```bash
+cd ~
+git clone https://github.com/leopqrz/MovieNook.git MovieNook
+cd MovieNook
+```
+
+If the `MovieNook` folder already exists, do not clone over it. Enter the existing folder instead:
+
+```bash
+cd ~/MovieNook
+```
+
+## Windows 3 — Create and fill the private credential file
+
+Continue in Git Bash:
+
+```bash
+./scripts/portable/bootstrap.sh
+notepad.exe private/credentials.env
+```
+
+Fill in at least these fields with credentials from your own provider and indexer accounts:
+
+```dotenv
+USENET_PROVIDER_NAME=
+USENET_HOST=
+USENET_PORT=563
+USENET_USE_SSL=true
+USENET_USERNAME=
+USENET_PASSWORD=
+
+INDEXER_1_NAME=
+INDEXER_1_URL=
+INDEXER_1_API_KEY=
+```
+
+Save and close Notepad. Leave Radarr, Sonarr, Prowlarr, Seerr, SABnzbd, and qBittorrent API fields blank; MovieNook fills those local values after startup.
+
+## Windows 4 — Start MovieNook
+
+Open the `MovieNook` folder in File Explorer and double-click **MovieNook.cmd**.
+
+From PowerShell, the equivalent command is:
+
+```powershell
+Set-Location "$HOME\MovieNook"
+.\MovieNook.cmd
+```
+
+Follow the [first-launch steps](#what-happens-on-the-first-launch) when the browser opens.
+
+## Windows daily commands
+
+To start MovieNook, double-click **MovieNook.cmd**. From PowerShell:
+
+```powershell
+Set-Location "$HOME\MovieNook"
+.\MovieNook.cmd
+```
+
+For status, stop, and update commands, open Git Bash.
+
+Show status:
+
+```bash
+cd ~/MovieNook
+./scripts/portable/status-movienook.sh
+```
+
+Stop only MovieNook services:
+
+```bash
+cd ~/MovieNook
+./scripts/portable/stop-movienook.sh
+```
+
+Update and restart:
+
+```bash
+cd ~/MovieNook
+git pull --ff-only
+docker compose --env-file .env pull
+./MovieNook.sh
+```
+
+Show the latest startup errors from PowerShell:
+
+```powershell
+Set-Location "$HOME\MovieNook"
+Get-Content private\last-start.log -Tail 100
+```
+
+# Linux setup (Ubuntu or Debian)
+
+Complete these steps in order in a terminal.
+
+## Linux 1 — Install Docker, Compose, Git, curl, and xdg-open
+
+These commands add Docker's official repository and install every required package:
 
 ```bash
 sudo apt-get update
@@ -80,7 +307,7 @@ sudo systemctl enable --now docker
 sudo usermod -aG docker "$USER"
 ```
 
-Log out and back in so the Docker group change takes effect. Then verify the tools without `sudo`:
+Log out and back in so the Docker group change takes effect. Then verify the installation without `sudo`:
 
 ```bash
 docker version
@@ -90,39 +317,35 @@ curl --version
 xdg-open --version
 ```
 
-For another Linux distribution, use the matching official [Docker Engine installation guide](https://docs.docker.com/engine/install/) and install packages named `git`, `curl`, and `xdg-utils` with that distribution's package manager.
+For another Linux distribution, use its official [Docker Engine installation guide](https://docs.docker.com/engine/install/) and install `git`, `curl`, and `xdg-utils` with that distribution's package manager.
 
-## 2. Get MovieNook
+## Linux 2 — Download MovieNook
 
-Clone the public repository and enter its folder:
+This places the entire project in `~/MovieNook`:
 
 ```bash
+cd "$HOME"
 git clone https://github.com/leopqrz/MovieNook.git MovieNook
 cd MovieNook
-```
-
-If the project was downloaded as a ZIP, extract it and open a terminal in the extracted `MovieNook` folder instead. Do not copy another owner's `.env`, `private`, `config`, `media`, or `downloads` folders.
-
-## 3. Create the local files
-
-Run the bootstrap once from the MovieNook folder. It creates `.env`, `private/credentials.env`, and the empty config, download, and media directories. It does not start services or invent external account credentials.
-
-On macOS or Linux:
-
-```bash
 chmod +x MovieNook.sh scripts/portable/*.sh
-./scripts/portable/bootstrap.sh
 ```
 
-On Windows, open **Git Bash** in the MovieNook folder and run:
+If `~/MovieNook` already exists, do not clone over it. Enter the existing folder instead:
+
+```bash
+cd "$HOME/MovieNook"
+```
+
+## Linux 3 — Create and fill the private credential file
+
+Create the local folders and private credential file:
 
 ```bash
 ./scripts/portable/bootstrap.sh
+nano private/credentials.env
 ```
 
-### Enter the external account details
-
-At least one Usenet provider and one Newznab-compatible indexer are currently required for automatic first-run wiring. Enter these fields in `private/credentials.env`:
+Fill in at least these fields with credentials from your own provider and indexer accounts:
 
 ```dotenv
 USENET_PROVIDER_NAME=
@@ -137,187 +360,133 @@ INDEXER_1_URL=
 INDEXER_1_API_KEY=
 ```
 
-Open the private file with the operating system's editor:
+In Nano, save with **Ctrl+O**, press **Enter**, and exit with **Ctrl+X**. Leave Radarr, Sonarr, Prowlarr, Seerr, SABnzbd, and qBittorrent API fields blank; MovieNook fills those local values after startup.
 
-macOS:
+## Linux 4 — Start MovieNook
 
-```bash
-open -a TextEdit private/credentials.env
-```
-
-Windows PowerShell or Git Bash:
-
-```powershell
-notepad.exe private/credentials.env
-```
-
-Linux:
-
-```bash
-nano private/credentials.env
-```
-
-Save the file. Leave locally generated fields such as Radarr, Sonarr, Prowlarr, Seerr, SABnzbd, and qBittorrent API credentials blank; MovieNook populates those after the services start. Do not put Plex, Google, Apple, or VPN passwords in this file.
-
-## 4. Start MovieNook
-
-Start the VPN application first when torrents are enabled. Then use the operating-system launcher.
-
-macOS, from Terminal:
-
-```bash
-open MovieNook.app
-```
-
-Windows, from PowerShell:
-
-```powershell
-.\MovieNook.cmd
-```
-
-Linux:
+Run:
 
 ```bash
 ./MovieNook.sh
 ```
 
-The graphical files can also be double-clicked. On Linux, if the file manager opens `MovieNook.sh` as text, right-click it, allow execution as a program, or use the terminal command above.
+Some Linux file managers can also run `MovieNook.sh` by double-clicking it after **Allow executing file as program** is enabled.
 
-## 5. Complete the one-time account approvals
+Follow the [first-launch steps](#what-happens-on-the-first-launch) when the browser opens.
 
-1. When prompted about a VPN, connect any supported full-tunnel VPN or explicitly continue without one. MovieNook keeps qBittorrent stopped unless it verifies the VPN-routed public address.
-2. Plex opens its secure sign-in page. Sign in with the new owner's Plex account and approve MovieNook. MovieNook receives the approval through Plex's API; it does not store a Plex, Google, or Apple password.
-3. MovieNook names the server MovieNook, creates missing Movies and TV libraries, registers matching Radarr and Sonarr folders, connects Seerr to Plex/Radarr/Sonarr, and opens Seerr plus Plex.
-4. In each fresh browser profile, click **Login with Plex** once in Seerr. Plex normally reuses the browser's Plex session, and Seerr stores its own session cookie. Browser security prevents MovieNook from silently copying Plex's login cookie.
+## Linux daily commands
 
-Payment, invitations, CAPTCHAs, email approval, Plex sign-in, and VPN sign-in must be completed by the account owner. Usenet and indexer accounts are unrelated to Plex and cannot use the Plex login.
-
-## Everyday commands
-
-Run all commands from the MovieNook folder.
-
-### Start
-
-macOS or Linux:
+Start MovieNook:
 
 ```bash
+cd "$HOME/MovieNook"
 ./MovieNook.sh
 ```
 
-Windows PowerShell:
-
-```powershell
-.\MovieNook.cmd
-```
-
-### Show status
-
-macOS or Linux:
+Show status:
 
 ```bash
+cd "$HOME/MovieNook"
 ./scripts/portable/status-movienook.sh
 ```
 
-Windows PowerShell:
-
-```powershell
-& "$Env:ProgramFiles\Git\bin\bash.exe" ./scripts/portable/status-movienook.sh
-```
-
-### Stop only MovieNook services
-
-macOS or Linux:
+Stop only MovieNook services:
 
 ```bash
+cd "$HOME/MovieNook"
 ./scripts/portable/stop-movienook.sh
 ```
 
-Windows PowerShell:
-
-```powershell
-& "$Env:ProgramFiles\Git\bin\bash.exe" ./scripts/portable/stop-movienook.sh
-```
-
-## Update the project
-
-Back up local state before a major update. When the folder is a Git clone, update public project files without overwriting private credentials:
+Update and restart:
 
 ```bash
+cd "$HOME/MovieNook"
 git pull --ff-only
 docker compose --env-file .env pull
 ./MovieNook.sh
 ```
 
-On Windows, run the first two commands in Git Bash, then double-click `MovieNook.cmd`. Never commit or replace `.env`, `private/`, `config/`, `media/`, or `downloads/`.
+Show the latest startup errors:
 
-## Smart quality selection
+```bash
+cd "$HOME/MovieNook"
+tail -n 100 private/last-start.log
+```
 
-MovieNook creates a **Best Available (Auto Upgrade)** profile from the qualities already exposed by Radarr and Sonarr. It discovers the local quality IDs and resolution ladder instead of assuming fixed values, downloads the best qualifying release currently reported by the configured indexers, and keeps monitoring until the highest enabled resolution becomes available. Seerr uses this profile by default, so normal requests do not need to guess between HD and Ultra-HD.
+# What happens on the first launch
 
-After a lower-quality file is imported, Radarr and Sonarr evaluate newly published releases during their normal RSS/feed sync and replace it when a preferred release reaches the profile cutoff. They do not repeatedly deep-search the entire historical catalog. Run a manual search if a higher release already existed but was previously missed or rejected.
+The process is the same on every operating system:
 
-Release availability comes from Prowlarr's indexers. The Usenet provider carries a selected download but does not publish the searchable release catalog.
+1. **VPN check:** connect a supported full-tunnel VPN or choose to continue without one. Without a verified VPN, MovieNook starts the non-torrent services and keeps qBittorrent stopped.
+2. **Plex authorization:** sign in on Plex's secure page with the new owner's Plex account and approve MovieNook. MovieNook receives an API authorization; it never receives or stores the Plex password.
+3. **Automatic configuration:** MovieNook names the Plex server, creates missing Movies and TV libraries, configures Radarr and Sonarr folders, connects Prowlarr and the download clients, and connects Seerr to Plex, Radarr, and Sonarr.
+4. **Seerr sign-in:** click **Login with Plex** once in each new browser profile. Plex normally reuses that browser's session, and Seerr stores its own session cookie. Browser security prevents MovieNook from silently copying the Plex cookie.
+5. **Daily use:** use Seerr to request media and Plex to watch it.
 
-## VPN behavior
+Payments, invitations, CAPTCHAs, email approvals, and account sign-ins must be completed by the account owner.
 
-VPN detection is provider-neutral on macOS, Linux, and Windows; Tailscale is deliberately excluded because it is not a public internet privacy tunnel by itself. If a recognized VPN client is installed, MovieNook can open it. **Connect Another VPN Manually** supports other providers.
+# How automatic quality selection works
 
-Without a verified VPN, MovieNook starts Plex, Seerr, Radarr, Sonarr, Prowlarr, and SABnzbd but keeps qBittorrent stopped. When enabled, qBittorrent starts only after MovieNook compares its public address with the VPN-routed host address. MovieNook cannot determine whether an arbitrary VPN subscription permits P2P.
+MovieNook creates a **Best Available (Auto Upgrade)** profile from the qualities exposed by Radarr and Sonarr. It discovers the available resolution ladder instead of assuming fixed quality IDs.
 
-If the VPN disconnects after startup, qBittorrent is not automatically killed. Enable the VPN client's kill switch for that guarantee. MovieNook records only the provider name and authentication method in `private/credentials.env`; VPN OAuth sessions stay in the operating system's secure credential storage.
+If only a lower-quality release is available, Radarr or Sonarr can download it first. They continue evaluating new indexer releases through their normal RSS/feed sync and replace the file when a preferred release reaches the profile cutoff. They do not repeatedly search the entire historical catalog; use a manual search if a higher-quality release already existed but was previously missed or rejected.
 
-## Troubleshooting commands
+Prowlarr's indexers report release availability. The Usenet provider transfers the selected download but does not publish the searchable release catalog.
 
-Confirm that Docker works and show every MovieNook container:
+# VPN behavior
+
+VPN detection works on macOS, Windows, and Linux and is not hardcoded to one provider. Tailscale is excluded because it is not a public internet privacy tunnel by itself. **Connect Another VPN Manually** supports providers MovieNook does not recognize by name.
+
+When torrents are enabled, MovieNook starts qBittorrent only after comparing the container's public address with the VPN-routed host address. MovieNook cannot determine whether an arbitrary VPN account permits P2P.
+
+If the VPN disconnects after startup, qBittorrent is not automatically killed. Enable the VPN client's kill switch if that guarantee is required. VPN OAuth sessions remain in the operating system's secure credential storage.
+
+# General troubleshooting
+
+Run these commands from the MovieNook folder.
+
+Confirm Docker is running and show the containers:
 
 ```bash
 docker info
 docker compose --env-file .env ps
 ```
 
-Show MovieNook's latest startup log.
-
-macOS or Linux:
-
-```bash
-tail -n 100 private/last-start.log
-```
-
-Windows PowerShell:
-
-```powershell
-Get-Content private\last-start.log -Tail 100
-```
-
-Show recent Compose logs without changing anything:
+Show recent service logs:
 
 ```bash
 docker compose --env-file .env logs --tail 100
 ```
 
-Local interfaces use the ports recorded in `.env`. List them with:
+List the configured local ports on macOS, Linux, or Git Bash:
 
 ```bash
 grep '_PORT=' .env
 ```
 
-On Windows PowerShell, use:
+List the configured ports in Windows PowerShell:
 
 ```powershell
 Select-String '_PORT=' .env
 ```
 
-## Keep private
+# Keep private data out of GitHub
 
-`private/credentials.env` is the single private inventory for external account references, locally generated API keys, qBittorrent and SABnzbd Web UI credentials, Usenet provider credentials, and indexer credentials. It is readable only by the local user and excluded from Git.
+`private/credentials.env` is the local inventory for provider credentials, indexer credentials, local API keys, and the qBittorrent and SABnzbd Web UI credentials. It is excluded from Git.
 
-Plex and Seerr deliberately have no stored password: Plex uses browser OAuth, and Seerr uses Plex sign-in. Radarr, Sonarr, and Prowlarr use local API keys. Never put a Google or Apple SSO password in `private/credentials.env`.
+Never publish or share:
 
-Never publish `.env`, `private/`, `config/`, `media/`, or `downloads/`. `.gitignore` excludes all five, but always check before committing:
+- `.env`
+- `private/`
+- `config/`
+- `media/`
+- `downloads/`
+
+Before committing changes, verify that Git still ignores them:
 
 ```bash
 git status --short
 git check-ignore .env private/credentials.env config media downloads
 ```
 
-Each installation must create its own private file. Do not copy one owner's populated credentials to GitHub or another user.
+Each installation creates its own private files. Never copy one owner's populated credentials, service configuration, media library, or download history into the public repository.
