@@ -62,6 +62,9 @@ function rememberVpn(provider, authMethod) {
   );
 }
 
+// Recorded before the VPN chooser, so repeated clicks made while MovieNook is still starting
+// are recognised by MovieNook.sh and do not each open another Plex tab.
+const launchRequestedAt = Math.floor(Date.now() / 1000);
 let proceed = true;
 let continueWithoutVpn = false;
 let waitForVpnInBackground = false;
@@ -125,6 +128,7 @@ try {
 
 if (proceed) try {
   const launchEnvironment = environment +
+    'export MOVIENOOK_LAUNCH_REQUESTED_AT=' + launchRequestedAt + '; ' +
     (continueWithoutVpn ? 'export MOVIENOOK_CONTINUE_WITHOUT_VPN=1; ' : '') +
     (waitForVpnInBackground ? 'export MOVIENOOK_WAIT_FOR_VPN=1; ' : '');
   app.doShellScript(

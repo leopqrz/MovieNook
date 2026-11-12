@@ -2,6 +2,10 @@
 # Portable terminal launcher. Windows invokes it through MovieNook.cmd and Git Bash.
 set -euo pipefail
 ROOT_DIR="$(cd -- "$(dirname -- "$0")" && pwd)"
+# When this launch was asked for. The macOS app passes the moment it was clicked, which can be
+# well before this script starts because the VPN chooser waits for an answer.
+launch_requested_at="${MOVIENOOK_LAUNCH_REQUESTED_AT:-}"
+[[ "$launch_requested_at" =~ ^[0-9]+$ ]] || launch_requested_at="$(date +%s)"
 LOCK_DIR="$ROOT_DIR/private/start.lock"
 mkdir -p "$ROOT_DIR/private"
 if ! mkdir "$LOCK_DIR" 2>/dev/null; then
@@ -99,12 +103,22 @@ if [[ -n "$plex_machine" ]]; then
 fi
 # Only Plex is opened: titles are requested from Plex through the Watchlist, so Seerr works in
 # the background. It stays available at http://127.0.0.1:${SEERR_PORT} for anyone who wants it.
-case "$(uname -s)" in
-  Darwin) open "$plex_url" ;;
-  Linux)
-    xdg-open "$plex_url" >/dev/null 2>&1 || true
-    ;;
-  MINGW*|MSYS*|CYGWIN*)
-    cmd.exe /c start '""' "$plex_url" >/dev/null 2>&1
-    ;;
-esac
+#
+# Clicking the launcher several times while it is still starting must not open a tab per click:
+# a launch requested before Plex was last opened has already been answered by that tab.
+open_stamp="$ROOT_DIR/private/last-plex-open"
+last_opened_at="$(sed -n '1p' "$open_stamp" 2>/dev/null || true)"
+if [[ "$last_opened_at" =~ ^[0-9]+$ ]] && (( launch_requested_at <= last_opened_at )); then
+  echo 'Plex was already opened after this launch was requested; not opening another tab.'
+else
+  case "$(uname -s)" in
+    Darwin) open "$plex_url" ;;
+    Linux)
+      xdg-open "$plex_url" >/dev/null 2>&1 || true
+      ;;
+    MINGW*|MSYS*|CYGWIN*)
+      cmd.exe /c start '""' "$plex_url" >/dev/null 2>&1
+      ;;
+  esac
+  date +%s > "$open_stamp"
+fi

@@ -431,7 +431,7 @@ Payments, invitations, CAPTCHAs, email approvals, and account sign-ins must be c
 
 # Adding a movie or show from inside Plex
 
-You do not have to open Seerr to request something. In Plex, search for a title or browse **Discover**, then choose **Add to Watchlist**. Seerr checks the owner's Plex Watchlist every few minutes, requests anything new, and the title appears in your Plex library when the download finishes.
+You do not have to open Seerr to request something. In Plex, search for a title or browse **Discover** (rows such as *Trending on Plex*, *Most Watchlisted This Week*, *Coming Soon*, and *Browse by Genre*), then choose **Add to Watchlist**. Seerr checks the owner's Plex Watchlist every few minutes, requests anything new, and the title appears in your Plex library when the download finishes.
 
 Everything already on the watchlist is requested the first time this runs, so remove titles you do not want downloaded. Seerr's own page still works for requests and has more ways to browse (genre, studio, upcoming).
 
