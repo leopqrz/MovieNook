@@ -425,6 +425,12 @@ The process is the same on every operating system:
 
 Payments, invitations, CAPTCHAs, email approvals, and account sign-ins must be completed by the account owner.
 
+# Adding a movie or show from inside Plex
+
+You do not have to open Seerr to request something. In Plex, search for a title or browse **Discover**, then choose **Add to Watchlist**. Seerr checks the owner's Plex Watchlist every few minutes, requests anything new, and the title appears in your Plex library when the download finishes.
+
+Everything already on the watchlist is requested the first time this runs, so remove titles you do not want downloaded. Seerr's own page still works for requests and has more ways to browse (genre, studio, upcoming).
+
 # Deleting a movie or show
 
 Delete it once, in either place, and MovieNook removes it everywhere:

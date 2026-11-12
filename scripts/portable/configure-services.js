@@ -431,6 +431,18 @@ async function upsertSeerrService(kind, body) {
   else await seerrWrite(`/settings/${kind}`, "POST", body);
 }
 
+// Lets the owner add titles from inside Plex: anything put on the Plex Watchlist is requested
+// in Seerr automatically, downloaded, and then appears in the Plex library.
+async function ensureWatchlistRequests() {
+  const owner = await seerrGet("/auth/me");
+  const current = await seerrGet(`/user/${owner.id}/settings/main`);
+  if (current.watchlistSyncMovies === true && current.watchlistSyncTv === true) return;
+  await seerrWrite(`/user/${owner.id}/settings/main`, "POST", {
+    ...current, watchlistSyncMovies: true, watchlistSyncTv: true
+  });
+  console.log("Titles added to the Plex Watchlist will now be requested automatically.");
+}
+
 async function main() {
   const publicSettings = await request(`${base.seerr}/settings/public`);
   const mainSettings = await seerrGet("/settings/main");
@@ -503,6 +515,8 @@ async function main() {
     is4k: false, enableSeasonFolders: true, isDefault: true,
     externalUrl: "", syncEnabled: true, preventSearch: false
   });
+
+  await ensureWatchlistRequests();
 
   const libraries = await seerrGet("/settings/plex/library?sync=true");
   const ids = libraries.map(library => library.id).join(",");
