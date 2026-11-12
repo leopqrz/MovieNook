@@ -433,7 +433,7 @@ Payments, invitations, CAPTCHAs, email approvals, and account sign-ins must be c
 
 You do not have to open Seerr to request something. In Plex, search for a title or browse **Discover** (rows such as *Trending on Plex*, *Most Watchlisted This Week*, *Coming Soon*, and *Browse by Genre*), then choose **Add to Watchlist**. Seerr checks the owner's Plex Watchlist every few minutes, requests anything new, and the title appears in your Plex library when the download finishes.
 
-Everything already on the watchlist is requested the first time this runs, so remove titles you do not want downloaded. Seerr's own page still works for requests and has more ways to browse (genre, studio, upcoming).
+Everything already on the watchlist is requested the first time this runs, so remove titles you do not want downloaded. To cancel a title that has not finished downloading, take it off your Watchlist; within a few minutes it is removed from the download queue, Radarr or Sonarr, and Seerr. Search results are ordered by Plex; add the year to the search (for example `Spider-Man 2026`) to bring new releases to the top. Seerr's own page still works for requests and has more ways to browse (genre, studio, upcoming).
 
 # Deleting a movie or show
 
@@ -443,6 +443,8 @@ Delete it once, in either place, and MovieNook removes it everywhere:
 - **In your file manager:** move the title's folder inside `media/Movies` or `media/TV` to the Trash.
 
 Within about five minutes the `movienook-janitor` service removes the title from Radarr or Sonarr, so it is not downloaded again, and clears it from Seerr, so it can be requested again later. Deleting single episodes keeps the show and stops those episodes from being downloaded again; the show itself is removed once all of its episodes are gone.
+
+A deleted title is also taken off your Plex Watchlist, so it is not requested again. Taking a title off the Watchlist does not delete a movie or show that has already been downloaded; delete it in Plex instead.
 
 The janitor never deletes a media file itself, and it ignores deletions made before it was first started. To see what it did:
 
