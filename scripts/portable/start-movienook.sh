@@ -69,7 +69,13 @@ wait_for_url "Seerr" "http://127.0.0.1:${SEERR_PORT}/" "200" || true
 
 if [[ "${1:-}" == "--open" ]]; then
   seerr_url="http://127.0.0.1:${SEERR_PORT}"
+  # Open this server's own library: Plex's home page hides libraries that are not pinned to the sidebar.
   plex_url="http://127.0.0.1:${PLEX_PORT}/web"
+  plex_machine="$(curl --fail --silent --max-time 5 "http://127.0.0.1:${PLEX_PORT}/identity" 2>/dev/null \
+    | sed -nE 's/.*machineIdentifier="([^"]+)".*/\1/p' | head -n 1)" || true
+  if [[ -n "$plex_machine" ]]; then
+    plex_url="${plex_url}/index.html#!/media/${plex_machine}/com.plexapp.plugins.library?source=1"
+  fi
   case "$(uname -s)" in
     Darwin) open "$seerr_url" "$plex_url" ;;
     Linux) command -v xdg-open >/dev/null 2>&1 && xdg-open "$seerr_url" && xdg-open "$plex_url" ;;
