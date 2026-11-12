@@ -105,3 +105,26 @@ services:
     ports:
       - 127.0.0.1:${SEERR_PORT}:5055
     restart: unless-stopped
+
+  # Cleans up after a deletion: when a movie or show is deleted in Plex (or its files are
+  # removed by hand), this removes it from Radarr/Sonarr and Seerr so it is not downloaded
+  # again. It mounts media read-only and never deletes a media file itself.
+  janitor:
+    image: node:22-alpine
+    container_name: movienook-janitor
+    user: "${PUID}:${PGID}"
+    init: true
+    command: ["node", "/app/media-janitor.js"]
+    environment:
+      TZ: ${TZ}
+      MOVIENOOK_JANITOR_DRY_RUN: ${MOVIENOOK_JANITOR_DRY_RUN:-0}
+    volumes:
+      - ./scripts/portable/media-janitor.js:/app/media-janitor.js:ro
+      - ${MOVIENOOK_ROOT}/config:/movienook/config:ro
+      - ${MOVIENOOK_ROOT}/config/janitor:/state
+      - ${MOVIENOOK_ROOT}/media:/data/media:ro
+    depends_on:
+      - radarr
+      - sonarr
+      - seerr
+    restart: unless-stopped

@@ -141,6 +141,14 @@ async function ensurePlexConnection(service) {
   }
 }
 
+// When a file is deleted outside Radarr/Sonarr (for example with Plex's Delete), stop
+// monitoring it so it is not downloaded again before the media janitor removes the title.
+async function ensureUnmonitorDeleted(service, setting) {
+  const current = await apiGet(service, "/api/v3/config/mediamanagement");
+  if (current[setting] === true) return;
+  await apiWrite(service, `/api/v3/config/mediamanagement/${current.id}`, "PUT", { ...current, [setting]: true });
+}
+
 async function ensureRoot(service, path) {
   const roots = await apiGet(service, "/api/v3/rootfolder");
   const existing = roots.find(root => root.path.replace(/\/$/, "") === path.replace(/\/$/, ""));
@@ -444,6 +452,9 @@ async function main() {
   await ensurePlexConnection("radarr");
   await ensurePlexConnection("sonarr");
   console.log("Connected Radarr and Sonarr to Plex so finished downloads appear immediately.");
+  await ensureUnmonitorDeleted("radarr", "autoUnmonitorPreviouslyDownloadedMovies");
+  await ensureUnmonitorDeleted("sonarr", "autoUnmonitorPreviouslyDownloadedEpisodes");
+  console.log("Deleted movies and episodes will not be downloaded again.");
   await seerrWrite("/settings/plex", "POST", {
     ip: "plex", port: 32400, useSsl: false,
     webAppUrl: env.MOVIENOOK_PLEX_WEB_URL || "https://app.plex.tv/desktop"

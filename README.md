@@ -425,6 +425,21 @@ The process is the same on every operating system:
 
 Payments, invitations, CAPTCHAs, email approvals, and account sign-ins must be completed by the account owner.
 
+# Deleting a movie or show
+
+Delete it once, in either place, and MovieNook removes it everywhere:
+
+- **In Plex:** hover the poster, open the **⋮** menu, choose **Delete**, and confirm.
+- **In your file manager:** move the title's folder inside `media/Movies` or `media/TV` to the Trash.
+
+Within about five minutes the `movienook-janitor` service removes the title from Radarr or Sonarr, so it is not downloaded again, and clears it from Seerr, so it can be requested again later. Deleting single episodes keeps the show and stops those episodes from being downloaded again; the show itself is removed once all of its episodes are gone.
+
+The janitor never deletes a media file itself, and it ignores deletions made before it was first started. To see what it did:
+
+```bash
+docker logs movienook-janitor
+```
+
 # How automatic quality selection works
 
 MovieNook creates a **Best Available (Auto Upgrade)** profile from the qualities exposed by Radarr and Sonarr. It discovers the available resolution ladder instead of assuming fixed quality IDs.

@@ -20,6 +20,11 @@ docker info >/dev/null 2>&1 || { echo "Docker Desktop/Engine is not ready. Start
 
 docker compose --env-file .env up -d plex radarr sonarr prowlarr sabnzbd seerr
 
+# The janitor keeps its small state file here; create it as this user so the container can write to it.
+janitor_state_root="$(sed -nE 's/^MOVIENOOK_ROOT="?([^"]*)"?$/\1/p' .env | head -n 1)"
+mkdir -p "${janitor_state_root:-$ROOT_DIR}/config/janitor"
+docker compose --env-file .env up -d janitor
+
 qbittorrent_ready=0
 if [[ "${MOVIENOOK_CONTINUE_WITHOUT_VPN:-0}" == 1 ]]; then
   docker compose --env-file .env stop qbittorrent >/dev/null 2>&1 || true

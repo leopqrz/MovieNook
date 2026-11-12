@@ -34,7 +34,7 @@ if [[ ! -f "$ENV_FILE" ]]; then
   echo "Created .env for this MovieNook folder."
 fi
 
-for dir in config/{plex,radarr,sonarr,prowlarr,qbittorrent,sabnzbd,seerr} media/{Movies,TV} downloads/{torrents,usenet}; do
+for dir in config/{plex,radarr,sonarr,prowlarr,qbittorrent,sabnzbd,seerr,janitor} media/{Movies,TV} downloads/{torrents,usenet}; do
   mkdir -p "$ROOT_DIR/$dir"
 done
 
