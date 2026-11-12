@@ -2,10 +2,13 @@
 
 MovieNook is a self-hosted movie and TV setup for requesting, downloading, organizing, and watching media. It runs Plex, Seerr, Radarr, Sonarr, Prowlarr, qBittorrent, and SABnzbd with Docker Compose.
 
-After setup, one launcher starts everything and opens:
+After setup, one launcher starts everything and opens **Plex**, where you do everything:
 
-- **Seerr** to find and request movies or series.
-- **Plex** to watch downloaded media.
+- **Add** a movie or series by putting it on your Plex Watchlist; it is requested and downloaded for you.
+- **Watch** it in your Plex library.
+- **Delete** it in Plex, and it is removed everywhere.
+
+Seerr handles the requests in the background and stays available at `http://127.0.0.1:45055` if you want its extra ways to browse.
 
 ## Choose your operating system
 
@@ -420,8 +423,9 @@ The process is the same on every operating system:
 1. **VPN check:** connect a supported full-tunnel VPN or choose to continue without one. Without a verified VPN, MovieNook starts the non-torrent services and keeps qBittorrent stopped.
 2. **Plex authorization:** sign in on Plex's secure page with the new owner's Plex account and approve MovieNook. MovieNook receives an API authorization; it never receives or stores the Plex password.
 3. **Automatic configuration:** MovieNook names the Plex server, creates missing Movies and TV libraries, configures Radarr and Sonarr folders, connects Prowlarr and the download clients, and connects Seerr to Plex, Radarr, and Sonarr.
-4. **Seerr sign-in:** click **Login with Plex** once in each new browser profile. Plex normally reuses that browser's session, and Seerr stores its own session cookie. Browser security prevents MovieNook from silently copying the Plex cookie.
-5. **Daily use:** use Seerr to request media and Plex to watch it.
+4. **Plex opens:** the launcher opens your Plex library. Seerr is not opened; it works in the background.
+5. **Daily use:** add titles to your Plex Watchlist to request them, and watch them in Plex.
+6. **Optional Seerr sign-in:** to use Seerr's own page, open `http://127.0.0.1:45055` and click **Login with Plex** once in each new browser profile. Plex normally reuses that browser's session, and Seerr stores its own session cookie. Browser security prevents MovieNook from silently copying the Plex cookie.
 
 Payments, invitations, CAPTCHAs, email approvals, and account sign-ins must be completed by the account owner.
 

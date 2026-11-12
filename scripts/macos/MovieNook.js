@@ -132,7 +132,7 @@ if (proceed) try {
     ' >> ' + shellQuote(logFile) + ' 2>&1 < /dev/null &'
   );
   appendLog('MovieNook startup is continuing in the background.');
-  safeNotify('Startup is continuing in the background. Plex and Seerr will open when ready.', 'MovieNook');
+  safeNotify('Startup is continuing in the background. Plex will open when ready.', 'MovieNook');
 } catch (error) {
   app.displayDialog(
     'MovieNook could not start. Open private/last-start.log for details.\n\n' + error,

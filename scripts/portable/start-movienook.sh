@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Start the self-contained Docker stack. Run with --open to launch Seerr and Plex.
+# Start the self-contained Docker stack. Run with --open to launch Plex.
 set -euo pipefail
 ROOT_DIR="$(cd -- "$(dirname -- "$0")/../.." && pwd)"
 cd "$ROOT_DIR"
@@ -73,7 +73,6 @@ wait_for_url "Seerr" "http://127.0.0.1:${SEERR_PORT}/" "200" || true
 /bin/bash "$ROOT_DIR/scripts/portable/status-movienook.sh"
 
 if [[ "${1:-}" == "--open" ]]; then
-  seerr_url="http://127.0.0.1:${SEERR_PORT}"
   # Open this server's own library: Plex's home page hides libraries that are not pinned to the sidebar.
   plex_url="http://127.0.0.1:${PLEX_PORT}/web"
   plex_machine="$(curl --fail --silent --max-time 5 "http://127.0.0.1:${PLEX_PORT}/identity" 2>/dev/null \
@@ -82,7 +81,7 @@ if [[ "${1:-}" == "--open" ]]; then
     plex_url="${plex_url}/index.html#!/media/${plex_machine}/com.plexapp.plugins.library?source=1"
   fi
   case "$(uname -s)" in
-    Darwin) open "$seerr_url" "$plex_url" ;;
-    Linux) command -v xdg-open >/dev/null 2>&1 && xdg-open "$seerr_url" && xdg-open "$plex_url" ;;
+    Darwin) open "$plex_url" ;;
+    Linux) command -v xdg-open >/dev/null 2>&1 && xdg-open "$plex_url" ;;
   esac
 fi

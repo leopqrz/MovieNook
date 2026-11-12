@@ -85,7 +85,7 @@ set +e
 configuration_status=$?
 set -e
 if (( configuration_status != 0 )); then
-  echo 'MovieNook service configuration needs attention; opening Plex and Seerr because both interfaces are already available.' >&2
+  echo 'MovieNook service configuration needs attention; opening Plex because it is already available.' >&2
 fi
 set -a
 . "$ROOT_DIR/.env"
@@ -97,14 +97,14 @@ plex_machine="$(curl --fail --silent --max-time 5 "http://127.0.0.1:${PLEX_PORT}
 if [[ -n "$plex_machine" ]]; then
   plex_url="${plex_url}/index.html#!/media/${plex_machine}/com.plexapp.plugins.library?source=1"
 fi
+# Only Plex is opened: titles are requested from Plex through the Watchlist, so Seerr works in
+# the background. It stays available at http://127.0.0.1:${SEERR_PORT} for anyone who wants it.
 case "$(uname -s)" in
-  Darwin) open "http://127.0.0.1:${SEERR_PORT}" "$plex_url" ;;
+  Darwin) open "$plex_url" ;;
   Linux)
-    xdg-open "http://127.0.0.1:${SEERR_PORT}" >/dev/null 2>&1 || true
     xdg-open "$plex_url" >/dev/null 2>&1 || true
     ;;
   MINGW*|MSYS*|CYGWIN*)
-    cmd.exe /c start '""' "http://127.0.0.1:${SEERR_PORT}" >/dev/null 2>&1
     cmd.exe /c start '""' "$plex_url" >/dev/null 2>&1
     ;;
 esac
