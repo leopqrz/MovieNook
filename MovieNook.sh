@@ -90,14 +90,16 @@ fi
 set -a
 . "$ROOT_DIR/.env"
 set +a
+# Plex only listens on 127.0.0.1, so app.plex.tv cannot reach it; open the local web app.
+plex_url="http://127.0.0.1:${PLEX_PORT}/web"
 case "$(uname -s)" in
-  Darwin) open "http://127.0.0.1:${SEERR_PORT}" "https://app.plex.tv/desktop/" ;;
+  Darwin) open "http://127.0.0.1:${SEERR_PORT}" "$plex_url" ;;
   Linux)
     xdg-open "http://127.0.0.1:${SEERR_PORT}" >/dev/null 2>&1 || true
-    xdg-open "https://app.plex.tv/desktop/" >/dev/null 2>&1 || true
+    xdg-open "$plex_url" >/dev/null 2>&1 || true
     ;;
   MINGW*|MSYS*|CYGWIN*)
     cmd.exe /c start '""' "http://127.0.0.1:${SEERR_PORT}" >/dev/null 2>&1
-    cmd.exe /c start '""' "https://app.plex.tv/desktop/" >/dev/null 2>&1
+    cmd.exe /c start '""' "$plex_url" >/dev/null 2>&1
     ;;
 esac

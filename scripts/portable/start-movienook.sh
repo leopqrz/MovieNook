@@ -69,7 +69,7 @@ wait_for_url "Seerr" "http://127.0.0.1:${SEERR_PORT}/" "200" || true
 
 if [[ "${1:-}" == "--open" ]]; then
   seerr_url="http://127.0.0.1:${SEERR_PORT}"
-  plex_url="https://app.plex.tv/desktop/"
+  plex_url="http://127.0.0.1:${PLEX_PORT}/web"
   case "$(uname -s)" in
     Darwin) open "$seerr_url" "$plex_url" ;;
     Linux) command -v xdg-open >/dev/null 2>&1 && xdg-open "$seerr_url" && xdg-open "$plex_url" ;;

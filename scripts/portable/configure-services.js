@@ -92,6 +92,48 @@ async function ensurePlexLibrary(type, name, location, agent, scanner) {
   console.log(`Created Plex ${name} library.`);
 }
 
+async function ensurePlexAutoScan() {
+  const params = new URLSearchParams({
+    FSEventLibraryUpdatesEnabled: "1",
+    FSEventLibraryPartialScanEnabled: "1",
+    ScheduledLibraryUpdatesEnabled: "1",
+    ScheduledLibraryUpdateInterval: "3600"
+  });
+  await plexRequest(`/:/prefs?${params}`, { method: "PUT" });
+  // Catch up on anything that landed in the media folders while auto-scan was off.
+  await plexRequest("/library/sections/all/refresh");
+  console.log("Enabled Plex automatic library scans and started a catch-up scan.");
+}
+
+async function ensurePlexConnection(service) {
+  const schemas = await apiGet(service, "/api/v3/notification/schema");
+  const schema = clone(schemas.find(candidate => candidate.implementation === "PlexServer"));
+  if (!schema) throw new Error(`${service} has no PlexServer connection schema`);
+  schema.name = "MovieNook Plex";
+  setField(schema, "host", "plex");
+  setField(schema, "port", 32400);
+  setField(schema, "useSsl", false);
+  setField(schema, "authToken", keys.plex);
+  setField(schema, "updateLibrary", true);
+  const triggers = [
+    "onDownload", "onUpgrade", "onRename", "onImportComplete",
+    "onMovieDelete", "onMovieFileDelete", "onMovieFileDeleteForUpgrade",
+    "onSeriesDelete", "onEpisodeFileDelete", "onEpisodeFileDeleteForUpgrade"
+  ];
+  for (const trigger of triggers) {
+    if (schema[`supports${trigger.slice(0, 1).toUpperCase()}${trigger.slice(1)}`]) schema[trigger] = true;
+  }
+  const current = await apiGet(service, "/api/v3/notification");
+  const existing = current.find(item => item.implementation === "PlexServer");
+  if (existing) {
+    schema.id = existing.id;
+    await apiWrite(service, `/api/v3/notification/${existing.id}`, "PUT", schema);
+  } else {
+    delete schema.id;
+    await apiWrite(service, "/api/v3/notification", "POST", schema);
+  }
+}
+
 async function ensureRoot(service, path) {
   const roots = await apiGet(service, "/api/v3/rootfolder");
   const existing = roots.find(root => root.path.replace(/\/$/, "") === path.replace(/\/$/, ""));
@@ -390,8 +432,13 @@ async function main() {
   await plexRequest("/:/prefs?FriendlyName=MovieNook", { method: "PUT" });
   await ensurePlexLibrary("movie", "Movies", paths.movies, "tv.plex.agents.movie", "Plex Movie");
   await ensurePlexLibrary("show", "TV Shows", paths.television, "tv.plex.agents.series", "Plex TV Series");
+  await ensurePlexAutoScan();
+  await ensurePlexConnection("radarr");
+  await ensurePlexConnection("sonarr");
+  console.log("Connected Radarr and Sonarr to Plex so finished downloads appear immediately.");
   await seerrWrite("/settings/plex", "POST", {
-    ip: "plex", port: 32400, useSsl: false, webAppUrl: "https://app.plex.tv/desktop"
+    ip: "plex", port: 32400, useSsl: false,
+    webAppUrl: env.MOVIENOOK_PLEX_WEB_URL || "https://app.plex.tv/desktop"
   });
 
   await ensureSabnzbd();
