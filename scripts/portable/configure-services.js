@@ -92,6 +92,13 @@ async function ensurePlexLibrary(type, name, location, agent, scanner) {
   console.log(`Created Plex ${name} library.`);
 }
 
+async function ensurePlexReachable() {
+  if (!env.MOVIENOOK_PLEX_CUSTOM_CONNECTIONS) return;
+  const params = new URLSearchParams({ customConnections: env.MOVIENOOK_PLEX_CUSTOM_CONNECTIONS });
+  await plexRequest(`/:/prefs?${params}`, { method: "PUT" });
+  console.log("Published the local Plex address so app.plex.tv can reach this server.");
+}
+
 async function ensurePlexAutoScan() {
   const params = new URLSearchParams({
     FSEventLibraryUpdatesEnabled: "1",
@@ -432,6 +439,7 @@ async function main() {
   await plexRequest("/:/prefs?FriendlyName=MovieNook", { method: "PUT" });
   await ensurePlexLibrary("movie", "Movies", paths.movies, "tv.plex.agents.movie", "Plex Movie");
   await ensurePlexLibrary("show", "TV Shows", paths.television, "tv.plex.agents.series", "Plex TV Series");
+  await ensurePlexReachable();
   await ensurePlexAutoScan();
   await ensurePlexConnection("radarr");
   await ensurePlexConnection("sonarr");
